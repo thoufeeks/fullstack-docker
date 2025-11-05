@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Simple Stack – Frontend</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{font-family:Arial;margin:40px}
+    input,button,textarea{padding:8px;margin:6px 0;width:100%;max-width:480px}
+    .card{max-width:520px}
+  </style>
+</head>
+<body>
+  <h1>Simple Fullstack Demo</h1>
+  <div class="card">
+    <label for="name">Name</label>
+    <input id="name" placeholder="Your name" />
+
+    <label for="text">Message</label>
+    <textarea id="text" rows="4" placeholder="A short message"></textarea>
+
+    <button id="send">Send</button>
+
+    <h3>Saved messages</h3>
+    <ul id="list"></ul>
+  </div>
+
+  <script>
+    async function fetchMessages(){
+      try {
+        const res = await fetch('/api/messages');
+        const data = await res.json();
+        const list = document.getElementById('list');
+        list.innerHTML = '';
+        data.forEach(m=>{
+          const li = document.createElement('li');
+          li.textContent = `${m.id} — ${m.name}: ${m.text} (${m.created_at})`;
+          list.appendChild(li);
+        });
+      } catch(e){
+        console.error(e);
+      }
+    }
+
+    document.getElementById('send').addEventListener('click', async ()=>{
+      const name = document.getElementById('name').value || 'anonymous';
+      const text = document.getElementById('text').value || '';
+      if(!text) return alert('Add a message');
+      try {
+        const res = await fetch('/api/messages', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({name, text})
+        });
+        if(!res.ok) throw new Error('Failed');
+        document.getElementById('text').value = '';
+        await fetchMessages();
+      } catch(err){
+        alert('Error sending message');
+        console.error(err);
+      }
+    });
+
+    // initial load
+    fetchMessages();
+    // poll
+    setInterval(fetchMessages, 4000);
+  </script>
+</body>
+</html>
